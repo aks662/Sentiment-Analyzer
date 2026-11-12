@@ -1,45 +1,50 @@
 import React from 'react';
 
 /**
- * ConnectionStatus — shows express and database status badges
- * derived from /api/health response.
+ * ConnectionStatus — shows the live backend connection status
+ * with appropriate styling and accessible labels.
+ *
+ * @param {{ health: object, loading: boolean, onRefresh: function, refreshing: boolean }} props
  */
 export default function ConnectionStatus({ health, loading, onRefresh, refreshing }) {
-  function statusClass(val) {
-    if (loading) return 'conn-badge conn-badge--loading';
-    if (val === 'running' || val === 'connected' || val === 'ok') return 'conn-badge conn-badge--ok';
-    return 'conn-badge conn-badge--error';
+  if (loading) {
+    return (
+      <div className="connection-status connection-status--checking" role="status" aria-live="polite">
+        <span className="spinner spinner--sm" aria-hidden="true" />
+        <span>Checking connection…</span>
+      </div>
+    );
   }
 
-  function statusLabel(key, val) {
-    if (loading) return `${key}: checking…`;
-    return `${key}: ${val ?? '—'}`;
-  }
+  const isOk = health?.status === 'ok';
+  const dbOk = health?.database === 'connected';
 
-  const expressVal = health?.express;
-  const dbVal     = health?.database;
+  const statusClass = isOk && dbOk
+    ? 'connection-status--ok'
+    : isOk
+    ? 'connection-status--partial'
+    : 'connection-status--error';
+
+  const statusLabel = isOk && dbOk
+    ? 'All systems operational'
+    : isOk
+    ? 'Server up, database unavailable'
+    : 'Backend unreachable';
+
+  const statusDot = isOk && dbOk ? '●' : isOk ? '◐' : '○';
 
   return (
-    <div className="connection-badges" role="status" aria-live="polite">
-      <span className={statusClass(expressVal)} title="Express API server status">
-        <span className="conn-badge-dot" aria-hidden="true" />
-        {loading ? 'API…' : expressVal === 'running' ? 'API' : 'API down'}
-      </span>
-
-      <span className={statusClass(dbVal)} title="PostgreSQL database status">
-        <span className="conn-badge-dot" aria-hidden="true" />
-        {loading ? 'DB…' : dbVal === 'connected' ? 'DB' : 'DB down'}
-      </span>
-
+    <div className={`connection-status ${statusClass}`} role="status" aria-live="polite">
+      <span className="connection-dot" aria-hidden="true">{statusDot}</span>
+      <span className="connection-label">{statusLabel}</span>
       <button
-        className={`btn-icon${refreshing ? ' spinning' : ''}`}
+        className={`btn-icon btn-icon--sm${refreshing ? ' spinning' : ''}`}
         onClick={onRefresh}
-        disabled={loading || refreshing}
+        disabled={refreshing}
         title="Refresh connection status"
         aria-label="Refresh connection status"
-        id="refresh-status-btn"
       >
-        <span aria-hidden="true">↻</span>
+        ↻
       </button>
     </div>
   );
