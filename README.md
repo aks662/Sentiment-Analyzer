@@ -119,7 +119,25 @@ Before integration, Akshit and Prithviraj agree on these API contracts. Before b
 }
 ```
 
-The server—not the browser—must calculate the sentiment and score. The response should include the saved record fields: `id`, `transcript`, `source`, `sentiment`, `score`, `matched_terms`, and `created_at`.
+The server calls Parth's `analyzeSentiment(text)` implementation and persists its result. A successful response is HTTP 201 and contains the saved record, including PostgreSQL-generated `id` and `created_at`:
+
+```json
+{
+  "id": "1",
+  "transcript": "The agent was good, helpful and excellent.",
+  "source": "manual",
+  "sentiment": "positive",
+  "score": 3,
+  "matched_terms": ["good", "helpful", "excellent"],
+  "created_at": "2026-11-13T09:24:35.044Z"
+}
+```
+
+Common errors use `{ "error": "<code>" }`: HTTP 400 for missing, blank, non-string transcripts, invalid sources, or malformed JSON; HTTP 502 for an invalid analyzer result; and HTTP 500 for unexpected server or database errors. The health route returns HTTP 503 when PostgreSQL is unavailable. The score is an integer polarity score, not a probability.
+
+`GET /api/health` returns HTTP 200 with `{ "status": "ok", "express": "running", "database": "connected" }` when both Express and PostgreSQL are available. If the database check fails, it returns HTTP 503 with `{ "status": "error", "express": "running", "database": "unavailable" }`.
+
+`GET /api/calls` returns a JSON array of saved call records, newest first, limited to 100. It returns `[]` when there are no saved calls. Each record includes `id`, `transcript`, `source`, `sentiment`, `score`, `matched_terms`, and `created_at`.
 
 `GET /api/stats` response shape:
 
@@ -147,7 +165,7 @@ The IDE should create the package files and implement the commands below. These 
    CREATE DATABASE helpdesk_sentiment;
    ```
 
-3. Copy `.env.example` to `server/.env` and set the local PostgreSQL connection string.
+3. Copy `.env.example` to `server/.env`. Set either `DATABASE_URL` or the `PGHOST`, `PGPORT`, `PGDATABASE`, `PGUSER`, and `PGPASSWORD` values. Set `PORT=5001` for the backend. Optional pool settings are `PGPOOL_MAX`, `PGPOOL_IDLE_TIMEOUT_MS`, and `PGPOOL_CONNECTION_TIMEOUT_MS`.
 4. Run `server/schema.sql` against `helpdesk_sentiment` using pgAdmin Query Tool or:
 
    ```bash
@@ -155,12 +173,12 @@ The IDE should create the package files and implement the commands below. These 
    ```
 
 5. Install root, client, and server dependencies as specified by their package files.
-6. Start the frontend and backend using the root development script.
+6. Start the backend with `npm run dev --prefix server` and the frontend with `npm run dev --prefix client`. Alternatively, use `npm run dev` at the project root to start both.
 7. Open the Vite URL shown in the terminal, normally `http://localhost:5173`.
 
 Expected local ports: frontend `5173`, backend `5001`. The Vite development server forwards relative `/api` requests to Express on port `5001`. The browser must have microphone permission for the simulated-call feature. Manual transcript entry must still work when speech recognition is unavailable or permission is denied.
 
-Start the backend with `npm run dev --prefix server` and the frontend with `npm run dev --prefix client` (or both with the root `npm run dev` command). Run Parth's sentiment unit tests with `npm test --prefix server`.
+Run Parth's sentiment unit tests with `npm test --prefix server`. For API integration tests, create a dedicated test database (for example, `createdb helpdesk_sentiment_test`) and run `TEST_DATABASE_URL=postgresql:///helpdesk_sentiment_test npm run test:api --prefix server`. The integration suite refuses database names that do not end in `_test` and cleans only rows it inserted.
 
 ## 8. Speech-recognition and privacy note
 

@@ -23,7 +23,13 @@ test('calls API integrates validation, sentiment, history, and PostgreSQL', asyn
   const database = new Pool({ connectionString: testDatabaseUrl });
   const schema = await readFile(path.join(serverDir, 'schema.sql'), 'utf8');
   await database.query(schema);
-  const baseline = (await database.query('SELECT COUNT(*)::int AS total FROM calls')).rows[0].total;
+  const baseline = (await database.query(
+    `SELECT COUNT(*)::int AS total,
+       COUNT(*) FILTER (WHERE sentiment = 'positive')::int AS positive,
+       COUNT(*) FILTER (WHERE sentiment = 'neutral')::int AS neutral,
+       COUNT(*) FILTER (WHERE sentiment = 'negative')::int AS negative
+     FROM calls`,
+  )).rows[0];
 
   const portServer = net.createServer();
   await new Promise((resolve, reject) => portServer.listen(0, '127.0.0.1', resolve).once('error', reject));
@@ -102,10 +108,10 @@ test('calls API integrates validation, sentiment, history, and PostgreSQL', asyn
     assert.deepEqual(testRows.map((row) => String(row.id)), [...createdIds].reverse());
 
     const stats = await (await fetch(`${baseUrl}/api/stats`)).json();
-    assert.equal(stats.total, baseline + 3);
-    assert.equal(stats.positive, 1);
-    assert.equal(stats.negative, 1);
-    assert.equal(stats.neutral, 1);
+    assert.equal(stats.total, baseline.total + 3);
+    assert.equal(stats.positive, baseline.positive + 1);
+    assert.equal(stats.negative, baseline.negative + 1);
+    assert.equal(stats.neutral, baseline.neutral + 1);
 
     const persisted = await database.query('SELECT id FROM calls WHERE id = ANY($1::bigint[])', [createdIds]);
     assert.equal(persisted.rowCount, 3);
