@@ -6,6 +6,8 @@ import TranscriptForm from './components/TranscriptForm.jsx';
 import MicrophoneControls from './components/MicrophoneControls.jsx';
 import CallHistory from './components/CallHistory.jsx';
 import { fetchHealth, fetchStats, fetchCalls } from './services/api.js';
+import Footer from './components/Footer.jsx';
+import ErrorBoundary from './components/ErrorBoundary.jsx';
 
 // ─── Page: Dashboard ───────────────────────────────────────────────────────
 function DashboardPage({ stats, statsLoading, statsError, calls, callsLoading, callsError, onRefreshCalls, refreshingCalls, onNavigate }) {
@@ -303,6 +305,7 @@ export default function App() {
           refreshingHealth={refreshingHealth}
         />
 
+        <ErrorBoundary>
         <main className="page-content" id="main-content" role="main">
           {page === 'dashboard' && (
             <DashboardPage
@@ -338,6 +341,8 @@ export default function App() {
             />
           )}
         </main>
+        </ErrorBoundary>
+        <Footer />
       </div>
     </div>
   );
