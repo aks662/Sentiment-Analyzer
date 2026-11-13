@@ -4,7 +4,7 @@ import ConnectionStatus from './ConnectionStatus.jsx';
 const PAGE_LABELS = {
   dashboard:  { title: 'Dashboard', subtitle: 'Overview of all helpdesk call sentiment data' },
   analyze:    { title: 'Analyze Call', subtitle: 'Submit a transcript for sentiment analysis' },
-  history:    { title: 'Call History', subtitle: 'All recorded calls, newest first' },
+  history:    { title: 'Call History', subtitle: 'Latest calls, newest first' },
   statistics: { title: 'Statistics', subtitle: 'Detailed sentiment breakdown' },
 };
 

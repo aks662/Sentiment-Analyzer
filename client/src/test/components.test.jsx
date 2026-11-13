@@ -22,6 +22,7 @@ import StatCard from '../components/StatCard.jsx';
 import SentimentResult from '../components/SentimentResult.jsx';
 import TranscriptForm from '../components/TranscriptForm.jsx';
 import CallHistory from '../components/CallHistory.jsx';
+import App from '../App.jsx';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // SentimentBadge
@@ -137,6 +138,25 @@ describe('SentimentResult', () => {
   it('returns null when result is null', () => {
     const { container } = render(<SentimentResult result={null} />);
     expect(container.firstChild).toBeNull();
+  });
+});
+
+describe('App history and statistics scope', () => {
+  it('labels history and source counts as the latest 100 calls', async () => {
+    fetchHealth.mockResolvedValue({ status: 'ok', express: 'running', database: 'connected' });
+    fetchStats.mockResolvedValue({ total: 150, positive: 50, neutral: 50, negative: 50 });
+    fetchCalls.mockResolvedValue([
+      {
+        id: '150', transcript: 'recent helpful call', source: 'manual', sentiment: 'positive',
+        score: 1, matched_terms: ['helpful'], created_at: '2026-11-13T10:00:00Z',
+      },
+    ]);
+
+    render(<App />);
+    await userEvent.click(screen.getByRole('button', { name: 'Statistics' }));
+    expect(await screen.findByText('Source Breakdown (latest 100 calls)')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Call History' }));
+    expect(await screen.findByText('Latest calls, newest first. Click any row to expand details.')).toBeInTheDocument();
   });
 });
 
