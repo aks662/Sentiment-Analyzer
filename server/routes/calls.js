@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { getCallStats, getCalls, insertCall } from '../db.js';
+import { analyzeSentiment } from '../sentiment/analyzer.js';
 
 const router = Router();
 
@@ -14,21 +15,15 @@ router.post('/', async (request, response, next) => {
     return response.status(400).json({ error: 'invalid_source' });
   }
 
-  // Parth's sentiment module has not been added to this checkout. Do not
-  // persist a call with invented sentiment values; integration follows once
-  // the module path and interface are available from its owner.
-  if (!request.app.locals.analyzeSentiment) {
-    return response.status(503).json({ error: 'sentiment_module_unavailable' });
-  }
-
   try {
-    const analysis = request.app.locals.analyzeSentiment(transcript);
+    const analysis = analyzeSentiment(transcript.trim());
     const allowedSentiments = ['positive', 'neutral', 'negative'];
     if (
       !analysis ||
       !allowedSentiments.includes(analysis.sentiment) ||
       !Number.isInteger(analysis.score) ||
-      !Array.isArray(analysis.matched_terms)
+      !Array.isArray(analysis.matched_terms) ||
+      !analysis.matched_terms.every((term) => typeof term === 'string')
     ) {
       return response.status(502).json({ error: 'invalid_sentiment_module_response' });
     }
