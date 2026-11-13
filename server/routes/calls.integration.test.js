@@ -38,7 +38,12 @@ test('calls API integrates validation, sentiment, history, and PostgreSQL', asyn
 
   const child = spawn(process.execPath, ['index.js'], {
     cwd: serverDir,
-    env: { ...process.env, DATABASE_URL: testDatabaseUrl, PORT: String(port) },
+    env: {
+      ...process.env,
+      DATABASE_URL: testDatabaseUrl,
+      PORT: String(port),
+      FRONTEND_ORIGIN: 'https://frontend.example.test',
+    },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
   let childOutput = '';
@@ -66,6 +71,23 @@ test('calls API integrates validation, sentiment, history, and PostgreSQL', asyn
     const health = await waitForServer();
     assert.deepEqual(await health.json(), { status: 'ok', express: 'running', database: 'connected' });
 
+    const allowedOriginResponse = await fetch(`${baseUrl}/api/health`, {
+      headers: { Origin: 'https://frontend.example.test' },
+    });
+    assert.equal(allowedOriginResponse.headers.get('access-control-allow-origin'), 'https://frontend.example.test');
+    const rejectedOriginResponse = await fetch(`${baseUrl}/api/health`, {
+      headers: { Origin: 'https://unexpected.example.test' },
+    });
+    assert.equal(rejectedOriginResponse.headers.get('access-control-allow-origin'), null);
+    const preflight = await fetch(`${baseUrl}/api/calls`, {
+      method: 'OPTIONS',
+      headers: {
+        Origin: 'https://frontend.example.test',
+        'Access-Control-Request-Method': 'POST',
+      },
+    });
+    assert.equal(preflight.status, 204);
+
     for (const body of [
       {},
       { transcript: '', source: 'manual' },
@@ -80,6 +102,13 @@ test('calls API integrates validation, sentiment, history, and PostgreSQL', asyn
       assert.equal(response.status, 400, JSON.stringify(body));
       assert.equal(typeof (await response.json()).error, 'string');
     }
+    const malformedJson = await fetch(`${baseUrl}/api/calls`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: '{"transcript":',
+    });
+    assert.equal(malformedJson.status, 400);
+    assert.deepEqual(await malformedJson.json(), { error: 'invalid_json' });
 
     const examples = [
       ['The agent was good, helpful and excellent.', 'manual', 'positive', 3],
@@ -116,7 +145,7 @@ test('calls API integrates validation, sentiment, history, and PostgreSQL', asyn
     const persisted = await database.query('SELECT id FROM calls WHERE id = ANY($1::bigint[])', [createdIds]);
     assert.equal(persisted.rowCount, 3);
     assertionsCompleted = true;
-    t.diagnostic('Health, validation, classifications, both valid sources, history, stats, and persisted rows passed.');
+    t.diagnostic('Health, CORS allowlist, validation, classifications, both valid sources, history, stats, and persisted rows passed.');
   } finally {
     if (createdIds.length) await database.query('DELETE FROM calls WHERE id = ANY($1::bigint[])', [createdIds]);
     if (child.exitCode === null) child.kill('SIGTERM');

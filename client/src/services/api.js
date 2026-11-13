@@ -3,7 +3,7 @@
  * All fetch calls use relative paths — Vite proxies /api/* to Express on port 5001.
  */
 
-const BASE = '/api';
+const BASE = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/+$/, '');
 
 function friendlyError(code) {
   const map = {
