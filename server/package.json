@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "node --watch index.js",
     "start": "node index.js",
-    "test": "node --test sentiment/analyzer.test.js"
+    "test": "node --test sentiment/analyzer.test.js",
+    "test:api": "node --test routes/calls.integration.test.js"
   },
   "dependencies": {
     "dotenv": "^16.4.7",
