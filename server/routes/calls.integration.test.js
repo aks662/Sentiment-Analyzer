@@ -50,6 +50,8 @@ test('calls API integrates validation, sentiment, history, and PostgreSQL', asyn
   child.stdout.setEncoding('utf8').on('data', (chunk) => { childOutput += chunk; });
   child.stderr.setEncoding('utf8').on('data', (chunk) => { childOutput += chunk; });
   const baseUrl = `http://127.0.0.1:${port}`;
+  let restartChild = null;
+  let restartOutput = '';
   const createdIds = [];
   let assertionsCompleted = false;
   const marker = `api-test-${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -144,13 +146,57 @@ test('calls API integrates validation, sentiment, history, and PostgreSQL', asyn
 
     const persisted = await database.query('SELECT id FROM calls WHERE id = ANY($1::bigint[])', [createdIds]);
     assert.equal(persisted.rowCount, 3);
+
+    const firstExit = new Promise((resolve) => child.once('exit', resolve));
+    child.kill('SIGTERM');
+    assert.equal(await firstExit, 0, `First backend failed graceful shutdown: ${childOutput}`);
+
+    const restartPortServer = net.createServer();
+    await new Promise((resolve, reject) => restartPortServer.listen(0, '127.0.0.1', resolve).once('error', reject));
+    const restartPort = restartPortServer.address().port;
+    await new Promise((resolve) => restartPortServer.close(resolve));
+    restartChild = spawn(process.execPath, ['index.js'], {
+      cwd: serverDir,
+      env: {
+        ...process.env,
+        DATABASE_URL: testDatabaseUrl,
+        PORT: String(restartPort),
+        FRONTEND_ORIGIN: 'https://frontend.example.test',
+      },
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    restartChild.stdout.setEncoding('utf8').on('data', (chunk) => { restartOutput += chunk; });
+    restartChild.stderr.setEncoding('utf8').on('data', (chunk) => { restartOutput += chunk; });
+    const restartUrl = `http://127.0.0.1:${restartPort}`;
+    let restarted = false;
+    const restartDeadline = Date.now() + 10000;
+    while (Date.now() < restartDeadline) {
+      if (restartChild.exitCode !== null) throw new Error(`Restarted backend exited early: ${restartOutput}`);
+      try {
+        const response = await fetch(`${restartUrl}/api/health`);
+        if (response.ok) {
+          restarted = true;
+          break;
+        }
+      } catch {}
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+    assert.ok(restarted, `Backend did not restart: ${restartOutput}`);
+    const afterRestart = await (await fetch(`${restartUrl}/api/calls`)).json();
+    assert.equal(afterRestart.filter((row) => String(row.transcript).startsWith(marker)).length, 3);
+    const restartExit = new Promise((resolve) => restartChild.once('exit', resolve));
+    restartChild.kill('SIGTERM');
+    assert.equal(await restartExit, 0, `Restarted backend failed graceful shutdown: ${restartOutput}`);
+
     assertionsCompleted = true;
-    t.diagnostic('Health, CORS allowlist, validation, classifications, both valid sources, history, stats, and persisted rows passed.');
+    t.diagnostic('Health, CORS allowlist, validation, classifications, both valid sources, history, stats, PostgreSQL persistence across backend restart, and persisted rows passed.');
   } finally {
     if (createdIds.length) await database.query('DELETE FROM calls WHERE id = ANY($1::bigint[])', [createdIds]);
     if (child.exitCode === null) child.kill('SIGTERM');
     const exitCode = child.exitCode ?? await new Promise((resolve) => child.once('exit', resolve));
     if (assertionsCompleted) assert.equal(exitCode, 0, `Backend failed graceful shutdown: ${childOutput}`);
+    if (restartChild?.exitCode === null) restartChild.kill('SIGTERM');
+    if (restartChild && assertionsCompleted) assert.equal(restartChild.exitCode, 0, `Restarted backend failed graceful shutdown: ${restartOutput}`);
     await database.end();
   }
 });
