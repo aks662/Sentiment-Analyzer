@@ -40,6 +40,7 @@ test('calls API integrates validation, sentiment, history, and PostgreSQL', asyn
   child.stderr.setEncoding('utf8').on('data', (chunk) => { childOutput += chunk; });
   const baseUrl = `http://127.0.0.1:${port}`;
   const createdIds = [];
+  let assertionsCompleted = false;
   const marker = `api-test-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 
   async function waitForServer() {
@@ -108,11 +109,13 @@ test('calls API integrates validation, sentiment, history, and PostgreSQL', asyn
 
     const persisted = await database.query('SELECT id FROM calls WHERE id = ANY($1::bigint[])', [createdIds]);
     assert.equal(persisted.rowCount, 3);
+    assertionsCompleted = true;
     t.diagnostic('Health, validation, classifications, both valid sources, history, stats, and persisted rows passed.');
   } finally {
     if (createdIds.length) await database.query('DELETE FROM calls WHERE id = ANY($1::bigint[])', [createdIds]);
-    child.kill('SIGTERM');
-    await new Promise((resolve) => child.once('exit', resolve));
+    if (child.exitCode === null) child.kill('SIGTERM');
+    const exitCode = child.exitCode ?? await new Promise((resolve) => child.once('exit', resolve));
+    if (assertionsCompleted) assert.equal(exitCode, 0, `Backend failed graceful shutdown: ${childOutput}`);
     await database.end();
   }
 });

@@ -27,6 +27,24 @@ app.use((error, _request, response, _next) => {
   return response.status(500).json({ error: 'internal_server_error' });
 });
 
-app.listen(port, '127.0.0.1', () => {
+const server = app.listen(port, '127.0.0.1', () => {
   console.log(`Sentiment Analyzer API listening at http://127.0.0.1:${port}`);
 });
+
+let shutdownPromise;
+export function shutdownServer(signal = 'shutdown') {
+  if (shutdownPromise) return shutdownPromise;
+  console.log(`Shutting down API after ${signal}.`);
+  shutdownPromise = new Promise((resolve, reject) => {
+    server.close((error) => (error ? reject(error) : resolve()));
+  })
+    .then(() => pool.end())
+    .catch(() => {
+      console.error('Graceful API shutdown failed.');
+      process.exitCode = 1;
+    });
+  return shutdownPromise;
+}
+
+process.once('SIGINT', () => void shutdownServer('SIGINT'));
+process.once('SIGTERM', () => void shutdownServer('SIGTERM'));
