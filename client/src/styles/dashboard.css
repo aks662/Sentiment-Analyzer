@@ -9,44 +9,46 @@
 }
 
 :root {
-  /* -- Colour palette -- */
-  --color-bg:          #0f1117;
-  --color-surface:     #161b27;
-  --color-surface-2:   #1e2535;
-  --color-surface-3:   #252d3d;
-  --color-border:      #2a3348;
-  --color-border-soft: #1e2838;
+  /* Warm neutral surfaces and a restrained botanical mint accent. */
+  --color-bg: #f4f3ee;
+  --color-surface: #fffefa;
+  --color-surface-2: #f1f0ea;
+  --color-surface-3: #e9e8e1;
+  --color-border: #deddd6;
+  --color-border-soft: #e9e8e1;
 
-  --color-text:        #e8edf5;
-  --color-text-muted:  #8898aa;
-  --color-text-dim:    #5c6b82;
+  --color-text: #292c29;
+  --color-text-muted: #666a64;
+  --color-text-dim: #70746d;
 
-  /* Accent */
-  --color-accent:      #4f8ef7;
-  --color-accent-hover:#3b78e8;
-  --color-accent-soft: rgba(79,142,247,0.12);
+  --color-accent: #4c806b;
+  --color-accent-hover: #3c6e59;
+  --color-accent-soft: #e6f1eb;
+  --color-accent-fill: #a7dccb;
+  --color-accent-fill-hover: #8bcbb5;
+  --color-accent-ink: #263a31;
+  --color-focus-ring: rgba(87, 145, 119, 0.24);
 
-  /* Sentiment */
-  --color-positive:    #22c55e;
-  --color-positive-bg: rgba(34,197,94,0.1);
-  --color-positive-border: rgba(34,197,94,0.3);
+  /* Sentiment colors retain distinct, accessible semantic meaning. */
+  --color-positive: #387454;
+  --color-positive-bg: #e8f2eb;
+  --color-positive-border: #c5ddcc;
 
-  --color-neutral:     #94a3b8;
-  --color-neutral-bg:  rgba(148,163,184,0.1);
-  --color-neutral-border: rgba(148,163,184,0.3);
+  --color-neutral: #6f756f;
+  --color-neutral-bg: #efefeb;
+  --color-neutral-border: #d7d9d3;
 
-  --color-negative:    #ef4444;
-  --color-negative-bg: rgba(239,68,68,0.1);
-  --color-negative-border: rgba(239,68,68,0.3);
+  --color-negative: #a44f4b;
+  --color-negative-bg: #f7ecea;
+  --color-negative-border: #e8cbc7;
 
-  /* Status */
-  --color-warning:     #f59e0b;
-  --color-warning-bg:  rgba(245,158,11,0.1);
-  --color-error:       #ef4444;
-  --color-success:     #22c55e;
+  --color-warning: #86672e;
+  --color-warning-bg: #f5f0e3;
+  --color-warning-border: #e6d9b7;
+  --color-error: #a44f4b;
+  --color-success: #387454;
 
-  /* Recording */
-  --color-recording:   #ef4444;
+  --color-recording: #a44f4b;
 
   /* Typography */
   --font-family:       'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -71,16 +73,16 @@
   --space-12: 3rem;
 
   /* Radius */
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
-  --radius-xl: 18px;
+  --radius-sm: 7px;
+  --radius-md: 11px;
+  --radius-lg: 15px;
+  --radius-xl: 19px;
   --radius-full: 9999px;
 
   /* Shadows */
-  --shadow-sm:  0 1px 3px rgba(0,0,0,0.3);
-  --shadow-md:  0 4px 12px rgba(0,0,0,0.4);
-  --shadow-lg:  0 8px 24px rgba(0,0,0,0.5);
+  --shadow-sm: 0 1px 2px rgba(48, 52, 46, 0.05), 0 2px 5px rgba(48, 52, 46, 0.035);
+  --shadow-md: 0 5px 16px rgba(48, 52, 46, 0.08), 0 1px 3px rgba(48, 52, 46, 0.04);
+  --shadow-lg: 0 12px 28px rgba(48, 52, 46, 0.11), 0 2px 5px rgba(48, 52, 46, 0.04);
 
   /* Transitions */
   --transition-fast:   150ms ease;
@@ -104,6 +106,7 @@ body {
   color: var(--color-text);
   line-height: 1.5;
   min-height: 100vh;
+  font-feature-settings: 'ss01' on;
 }
 
 #root {
@@ -125,12 +128,13 @@ body {
   margin-left: var(--sidebar-width);
   min-width: 0;
   transition: margin-left var(--transition-normal);
+  background: var(--color-bg);
 }
 
 .page-content {
   flex: 1;
   padding: var(--space-8);
-  max-width: 1200px;
+  max-width: 1320px;
   width: 100%;
   margin: 0 auto;
 }
@@ -141,8 +145,9 @@ body {
 }
 
 .section-title {
-  font-size: var(--font-size-xl);
-  font-weight: 600;
+  font-size: clamp(1.35rem, 1.6vw, 1.65rem);
+  font-weight: 650;
+  letter-spacing: -0.035em;
   color: var(--color-text);
   margin-bottom: var(--space-1);
 }
@@ -150,6 +155,7 @@ body {
 .section-subtitle {
   font-size: var(--font-size-sm);
   color: var(--color-text-muted);
+  line-height: 1.65;
 }
 
 /* ---- Stat cards grid ---- */
@@ -205,6 +211,7 @@ body {
   .page-content {
     padding: var(--space-5) var(--space-4);
   }
+
 }
 
 @media (max-width: 480px) {
@@ -226,6 +233,7 @@ body {
 :focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
+  box-shadow: 0 0 0 4px var(--color-focus-ring);
 }
 
 /* ---- Pulse animation for recording ---- */
@@ -251,4 +259,15 @@ body {
 @keyframes slideIn {
   from { opacity: 0; transform: translateX(-10px); }
   to   { opacity: 1; transform: translateX(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
 }

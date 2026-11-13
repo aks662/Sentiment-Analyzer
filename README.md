@@ -186,9 +186,29 @@ Browser `SpeechRecognition` support varies. Some browsers use a server-based rec
 
 Reference: [MDN — SpeechRecognition](https://developer.mozilla.org/en-US/docs/Web/API/SpeechRecognition) and [MDN — Web Speech API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Speech_API).
 
-## 9. Team ownership and repository details
+## 9. Production deployment preparation
 
-Fill these placeholders once the team shares the exact IDs and repository URL.
+The app is configured for a separately hosted React frontend and Express API. The frontend can use `VITE_API_BASE_URL` (including the `/api` suffix) to call the deployed API; when unset, it uses the relative `/api` path through the local Vite proxy. The backend binds to `HOST` and `PORT`; local defaults are `127.0.0.1` and `5001`. Set `FRONTEND_ORIGIN` to the exact deployed frontend origin to allow browser requests from that site. Other origins do not receive CORS permission.
+
+Suggested provider settings, pending provider accounts and database provisioning:
+
+| Service | Setting |
+|---|---|
+| Vercel frontend root | `client` |
+| Vercel install command | `npm ci` |
+| Vercel build command | `npm run build` |
+| Vercel output directory | `dist` |
+| Vercel public environment variable | `VITE_API_BASE_URL=https://<backend-host>/api` |
+| Render backend root | `server` |
+| Render install/build command | `npm ci` |
+| Render start command | `npm start` |
+| Render backend environment | `HOST=0.0.0.0`, platform-provided `PORT`, `DATABASE_URL=<managed PostgreSQL URL>`, `FRONTEND_ORIGIN=https://<frontend-host>` |
+
+Apply `server/schema.sql` once to the managed database using a secure provider connection before testing the deployed API. Keep the database URL in the backend's private environment settings; never add it to the Vite environment. The hosted app is not considered deployed until provider setup, health, persistence, and browser workflows are verified. No live frontend or backend URL is published in this repository yet.
+
+## 10. Team ownership and repository details
+
+The repository URL is [github.com/aks662/Sentiment-Analyzer](https://github.com/aks662/Sentiment-Analyzer).
 
 | Member | Assigned work | Branch | Commits |
 |---|---|---|---:|
@@ -200,14 +220,14 @@ Akshit owns backend infrastructure and calls Parth's sentiment module; he does n
 
 The team agrees on the sentiment module's JavaScript interface before integration, including input format and output fields (`sentiment`, `score`, and `matched_terms`). Akshit and Prithviraj agree on endpoint request/response formats before frontend integration. File ownership is primary responsibility: report bugs across boundaries, then have the primary owner implement fixes unless the team explicitly agrees otherwise. Coordinate edits to shared configuration, API contracts, README, and integration files to avoid conflicts.
 
-**GitHub repository:** `[GITHUB_REPOSITORY_URL]`
+**GitHub repository:** <https://github.com/aks662/Sentiment-Analyzer>
 
 **IDE instruction file:** `thoughts.md`  
 **Task allocation and commit plan:** `task.md`  
 **Copy/paste implementation prompt:** `IDE_PROMPT.md`  
 **Private viva notes:** `private-notes/` (must not be committed)
 
-## 10. Git workflow and commit-history rules
+## 11. Git workflow and commit-history rules
 
 Each member is responsible for **9 genuine, meaningful commits** on their own branch. The plan in `task.md` describes reviewable work increments, not permission to create empty commits or split trivial work artificially. Each commit must reflect work performed by its author.
 
@@ -229,7 +249,7 @@ Useful verification command:
 git log --all --format="%h | %an <%ae> | %s" --graph
 ```
 
-## 11. Submission acceptance checklist
+## 12. Submission acceptance checklist
 
 - [ ] The app opens in a browser and looks like a graphical dashboard, not a terminal application.
 - [ ] Manual transcript entry works even when microphone recognition is unavailable.

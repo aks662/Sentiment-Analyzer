@@ -61,7 +61,7 @@ function HistoryPage({ calls, loading, error, onRefresh, refreshing }) {
       <div className="section-header">
         <h2 className="section-title">Call History</h2>
         <p className="section-subtitle">
-          All recorded calls, newest first. Click any row to expand details.
+          Latest calls, newest first. Click any row to expand details.
         </p>
       </div>
       <CallHistory calls={calls} loading={loading} error={error} onRefresh={onRefresh} refreshing={refreshing} />
@@ -178,7 +178,7 @@ function StatisticsPage({ stats, loading, error, calls }) {
       {calls && calls.length > 0 && (
         <div className="card" style={{ marginTop: 'var(--space-5)' }}>
           <div className="card-header">
-            <h3 className="card-title">Source Breakdown</h3>
+            <h3 className="card-title">Source Breakdown (latest 100 calls)</h3>
           </div>
           <div className="card-body">
             {(() => {
