@@ -261,3 +261,39 @@ git log --all --format="%h | %an <%ae> | %s" --graph
 - [ ] No secrets or private viva notes are committed.
 - [ ] Each team member has 9 or more genuine commits under their own GitHub attribution.
 - [ ] The team can explain the limitations of lexicon sentiment and browser speech recognition.
+
+## 13. Frontend component inventory
+
+| Component | File | Purpose |
+|---|---|---|
+| `App` | `client/src/App.jsx` | Root component with page routing and global state |
+| `Sidebar` | `client/src/components/Sidebar.jsx` | Navigation sidebar with page links |
+| `Header` | `client/src/components/Header.jsx` | Top bar with connection status |
+| `StatCard` | `client/src/components/StatCard.jsx` | Animated stat counter card |
+| `TranscriptForm` | `client/src/components/TranscriptForm.jsx` | Manual transcript input form |
+| `MicrophoneControls` | `client/src/components/MicrophoneControls.jsx` | Microphone recording controls |
+| `CallHistory` | `client/src/components/CallHistory.jsx` | Expandable call history list |
+| `SentimentBadge` | `client/src/components/SentimentBadge.jsx` | Colored sentiment label |
+| `SentimentResult` | `client/src/components/SentimentResult.jsx` | Detailed analysis result card |
+| `ConnectionStatus` | `client/src/components/ConnectionStatus.jsx` | Backend health indicator |
+| `Footer` | `client/src/components/Footer.jsx` | App footer with branding |
+| `ErrorBoundary` | `client/src/components/ErrorBoundary.jsx` | Catches render errors gracefully |
+| `EmptyState` | `client/src/components/EmptyState.jsx` | Placeholder for empty data sections |
+| `LoadingSkeleton` | `client/src/components/LoadingSkeleton.jsx` | Shimmer placeholder while loading |
+| `NotificationToast` | `client/src/components/NotificationToast.jsx` | Auto-dismissing toast messages |
+
+### Custom hooks
+
+| Hook | File | Purpose |
+|---|---|---|
+| `useSpeechRecognition` | `client/src/hooks/useSpeechRecognition.js` | Web Speech API microphone input |
+| `useAutoRefresh` | `client/src/hooks/useAutoRefresh.js` | Interval-based data polling |
+| `useLocalStorage` | `client/src/hooks/useLocalStorage.js` | Persist preferences in localStorage |
+
+### Utility modules
+
+| Module | File | Purpose |
+|---|---|---|
+| `constants` | `client/src/utils/constants.js` | App-wide configuration values |
+| `formatters` | `client/src/utils/formatters.js` | Date, text, and score formatting |
+| `validators` | `client/src/utils/validators.js` | Input validation for forms |
